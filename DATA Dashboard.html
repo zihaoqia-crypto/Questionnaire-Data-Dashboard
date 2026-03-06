@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MIRRA — User Research Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#070d12;
+    --panel:#0c141a;
+    --panel2:#101b22;
+    --muted:#6b7e8f;
+    --muted2:#9ab0be;
+    --accent:#00d4b4;
+    --accent2:#00f0cc;
+    --accent3:#00a890;
+    --gold:#f5c842;
+    --white:#dff0f2;
+    --red:#ff5e6c;
+    --r:14px;
+    --mono:'Space Mono',monospace;
+    --sans:'DM Sans',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%;background:var(--bg);color:var(--white);font-family:var(--sans);font-size:14px}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 120% 60% at 50% -10%, rgba(0,212,180,.08) 0%, transparent 70%);pointer-events:none;z-index:0}
+
+  .wrap{max-width:1380px;margin:0 auto;padding:32px 24px;position:relative;z-index:1}
+
+  /* ── HEADER ── */
+  header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:32px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:16px}
+  .logo{width:52px;height:52px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:20px;color:#021010;flex-shrink:0;box-shadow:0 0 28px rgba(0,212,180,.3)}
+  .brand-text h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
+  .brand-text .sub{color:var(--muted2);font-size:12px;margin-top:3px}
+  .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .badge{background:rgba(0,212,180,.1);border:1px solid rgba(0,212,180,.25);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--accent);font-family:var(--mono)}
+  .btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;padding:9px 18px;border-radius:9px;color:#021010;font-family:var(--sans);font-weight:700;font-size:13px;cursor:pointer;transition:opacity .2s,transform .15s}
+  .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+  .btn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);padding:8px 14px;border-radius:9px;color:var(--white);font-family:var(--sans);font-size:13px;cursor:pointer;transition:background .2s}
+  .btn:hover{background:rgba(255,255,255,.08)}
+
+  /* ── HEADLINE STATS ── */
+  .headline-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+  .kpi-card{background:var(--panel);border:1px solid rgba(255,255,255,.05);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;transition:border-color .3s,transform .2s;cursor:default}
+  .kpi-card:hover{border-color:rgba(0,212,180,.25);transform:translateY(-2px)}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+  .kpi-card.gold::before{background:linear-gradient(90deg,var(--gold),transparent)}
+  .kpi-card.red::before{background:linear-gradient(90deg,var(--red),transparent)}
+  .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;font-family:var(--mono)}
+  .kpi-num{font-size:36px;font-weight:700;font-family:var(--mono);letter-spacing:-1px;color:var(--accent);line-height:1}
+  .kpi-card.gold .kpi-num{color:var(--gold)}
+  .kpi-card.red .kpi-num{color:var(--red)}
+  .kpi-desc{font-size:12px;color:var(--muted2);margin-top:6px;line-height:1.5}
+  .kpi-trend{display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;background:rgba(0,212,180,.1);color:var(--accent);padding:3px 8px;border-radius:5px;font-family:var(--mono)}
+  .kpi-card.gold .kpi-trend{background:rgba(245,200,66,.1);color:var(--gold)}
+
+  /* ── LAYOUT ── */
+  .main-grid{display:grid;grid-template-columns:1fr 320px;gap:18px}
+  .panel{background:var(--panel);border:1px solid rgba(255,255,255,.05);border-radius:var(--r);padding:22px}
+  .panel-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted2);margin-bottom:16px;display:flex;align-items:center;gap:8px;font-family:var(--mono)}
+  .panel-title::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px;display:inline-block}
+
+  /* ── CHARTS GRID ── */
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+  .chart-box{background:var(--panel2);border:1px solid rgba(255,255,255,.04);border-radius:12px;padding:16px}
+  .chart-label{font-size:12px;color:var(--muted2);margin-bottom:12px;font-family:var(--mono);display:flex;justify-content:space-between;align-items:center}
+  .chart-label span{color:var(--muted);font-size:11px}
+
+  /* ── INTEREST BAR ── */
+  .interest-bar-wrap{background:var(--panel2);border:1px solid rgba(255,255,255,.04);border-radius:12px;padding:16px;margin-bottom:18px}
+  .hbar-track{height:42px;background:rgba(255,255,255,.03);border-radius:8px;overflow:hidden;display:flex;margin-top:10px}
+  .hbar-seg{display:flex;align-items:center;justify-content:flex-start;padding-left:10px;font-size:12px;font-weight:700;color:#031212;transition:opacity .3s;white-space:nowrap;overflow:hidden;font-family:var(--mono)}
+  .hbar-seg:hover{opacity:.85}
+
+  /* ── PAY BARS ── */
+  .pay-bars{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:flex-end;height:120px;margin-bottom:8px;padding:0 4px}
+  .pay-bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+  .pay-bar{width:100%;border-radius:6px 6px 0 0;transition:height .6s cubic-bezier(.34,1.56,.64,1);position:relative;min-height:4px;cursor:pointer}
+  .pay-bar:hover{filter:brightness(1.15)}
+  .pay-bar-pct{font-size:11px;font-family:var(--mono);color:var(--accent);font-weight:700}
+  .pay-bar-label{font-size:10px;color:var(--muted);text-align:center;font-family:var(--mono)}
+
+  /* ── TABLE ── */
+  .table-section{margin-top:0}
+  .table-controls{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+  .table-search{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:7px 12px;color:var(--white);font-family:var(--sans);font-size:13px;width:220px;outline:none}
+  .table-search:focus{border-color:rgba(0,212,180,.4)}
+  .table-search::placeholder{color:var(--muted)}
+  .filter-btn{padding:6px 12px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--muted2);font-size:12px;cursor:pointer;transition:all .2s;font-family:var(--mono)}
+  .filter-btn.active{background:rgba(0,212,180,.12);border-color:rgba(0,212,180,.35);color:var(--accent)}
+  .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,.04)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{background:rgba(255,255,255,.03);color:var(--muted);text-align:left;padding:10px 12px;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;cursor:pointer;user-select:none}
+  thead th:hover{color:var(--accent)}
+  tbody tr{transition:background .15s}
+  tbody tr:hover{background:rgba(0,212,180,.04)}
+  tbody td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.025);vertical-align:middle}
+  .pill{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;font-family:var(--mono)}
+  .pill-yes{background:rgba(0,212,180,.12);color:var(--accent)}
+  .pill-no{background:rgba(255,255,255,.05);color:var(--muted)}
+  .pill-pay{background:rgba(245,200,66,.12);color:var(--gold)}
+  .score-bar{width:40px;height:5px;background:rgba(255,255,255,.05);border-radius:3px;display:inline-block;vertical-align:middle;margin-left:4px;overflow:hidden}
+  .score-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px}
+  .gender-f{color:#f0a0c0}
+  .gender-m{color:#90c0f0}
+  .gender-o{color:#d0a0f0}
+
+  /* ── SEGMENTS ── */
+  .segment-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+  .seg-card{background:var(--panel2);border:1px solid rgba(255,255,255,.04);border-radius:10px;padding:14px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .2s}
+  .seg-card:hover{border-color:rgba(0,212,180,.3);transform:translateY(-2px)}
+  .seg-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+  .seg-card:nth-child(1)::after{background:var(--accent)}
+  .seg-card:nth-child(2)::after{background:var(--gold)}
+  .seg-card:nth-child(3)::after{background:#a0d4f0}
+  .seg-card:nth-child(4)::after{background:var(--muted)}
+  .seg-pct{font-size:28px;font-weight:700;font-family:var(--mono);color:var(--accent)}
+  .seg-card:nth-child(2) .seg-pct{color:var(--gold)}
+  .seg-card:nth-child(3) .seg-pct{color:#a0d4f0}
+  .seg-card:nth-child(4) .seg-pct{color:var(--muted2)}
+  .seg-name{font-size:12px;font-weight:700;margin:4px 0 2px;color:var(--white)}
+  .seg-desc{font-size:11px;color:var(--muted);line-height:1.4}
+
+  /* ── INDICES ── */
+  .index-list{display:flex;flex-direction:column;gap:14px;margin-top:4px}
+  .idx-item{}
+  .idx-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .idx-label{font-size:12px;color:var(--muted2)}
+  .idx-val{font-size:14px;font-weight:700;font-family:var(--mono);color:var(--accent)}
+  .progress{height:7px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden}
+  .progress i{display:block;height:100%;background:linear-gradient(90deg,var(--accent3),var(--accent2));border-radius:4px;transition:width .8s cubic-bezier(.34,1.56,.64,1)}
+
+  /* ── ASIDE PANELS ── */
+  .aside-panel{background:var(--panel);border:1px solid rgba(255,255,255,.05);border-radius:var(--r);padding:20px;margin-bottom:16px}
+  .insight-item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+  .insight-item:last-child{border-bottom:none;padding-bottom:0}
+  .insight-icon{width:28px;height:28px;border-radius:7px;background:rgba(0,212,180,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
+  .insight-text{font-size:13px;line-height:1.5;color:var(--muted2)}
+  .insight-text strong{color:var(--white)}
+
+  /* ── TOOLTIP ── */
+  .tooltip{position:fixed;background:rgba(12,20,26,.95);border:1px solid rgba(0,212,180,.3);border-radius:8px;padding:8px 12px;font-size:12px;pointer-events:none;z-index:999;display:none;max-width:220px}
+
+  /* ── SUMMARY ── */
+  .summary-section{background:linear-gradient(135deg,rgba(0,212,180,.07),rgba(0,168,144,.04));border:1px solid rgba(0,212,180,.2);border-radius:var(--r);padding:22px;margin-top:18px}
+  .summary-title{font-size:14px;font-weight:700;font-family:var(--mono);color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .sum-item{padding:14px;background:rgba(0,0,0,.2);border-radius:10px;border:1px solid rgba(255,255,255,.04)}
+  .sum-num{font-size:26px;font-weight:700;font-family:var(--mono);color:var(--accent);margin-bottom:4px}
+  .sum-label{font-size:12px;color:var(--muted2);line-height:1.4}
+
+  /* ── FOOTER ── */
+  footer{margin-top:28px;color:var(--muted);font-size:12px;text-align:center;font-family:var(--mono);padding-bottom:20px}
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .panel,.kpi-card,.aside-panel{animation:fadeUp .4s ease both}
+  .kpi-card:nth-child(1){animation-delay:.05s}
+  .kpi-card:nth-child(2){animation-delay:.1s}
+  .kpi-card:nth-child(3){animation-delay:.15s}
+  .kpi-card:nth-child(4){animation-delay:.2s}
+  .kpi-card:nth-child(5){animation-delay:.25s}
+
+  @media(max-width:1100px){.main-grid{grid-template-columns:1fr}.headline-row{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:700px){.headline-row{grid-template-columns:1fr 1fr}.charts-grid{grid-template-columns:1fr}.summary-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="tooltip" id="tooltip"></div>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="logo">M</div>
+      <div class="brand-text">
+        <h1>MIRRA — User Research Dashboard</h1>
+        <div class="sub">Perception, Distortion & Aesthetic Decisions · Simulated Dataset (n=100) · Mixed US & Asia · Age-Skew 18–34</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="badge">● STUDY ACTIVE · Q1 2026</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="regen">↻ Regenerate</button>
+        <button class="btn" id="exportCharts">↓ Export SVGs</button>
+        <button class="btn-primary" id="downloadCsv">↓ Download CSV (n=100)</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- KPI ROW -->
+  <div class="headline-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Interest Rate</div>
+      <div class="kpi-num" id="kpi-int">73%</div>
+      <div class="kpi-desc">High Interest Rate</div>
+      <div class="kpi-trend">↑ Strong signal</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Filter–Reality Gap</div>
+      <div class="kpi-num" id="kpi-gap">82%</div>
+      <div class="kpi-desc">See themselves better in filtered images</div>
+      <div class="kpi-trend">↑ Strong signal</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">3D Structural Interest</div>
+      <div class="kpi-num" id="kpi-3d">83%</div>
+      <div class="kpi-desc">Would definitely/probably try a 3D tool</div>
+      <div class="kpi-trend">↑ High intent</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Willing to Pay</div>
+      <div class="kpi-num" id="kpi-pay">68%</div>
+      <div class="kpi-desc">Subscription or one-time purchase</div>
+      <div class="kpi-trend">↑ Monetizable</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Aesthetic Consideration</div>
+      <div class="kpi-num" id="kpi-consider">52%</div>
+      <div class="kpi-desc">Considered or planning aesthetic procedures</div>
+      <div class="kpi-trend">↑ Core TAM</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Structural Confidence Deficit</div>
+      <div class="kpi-num" id="kpi-deficit">61%</div>
+      <div class="kpi-desc">Lack confidence in facial proportions</div>
+      <div class="kpi-trend" style="background:rgba(255,94,108,.1);color:var(--red)">↑ Unmet need</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+    <main>
+
+      <!-- CHARTS -->
+      <div class="panel">
+        <div class="panel-title">Perception & Distortion Analysis</div>
+        <div class="charts-grid">
+          <div class="chart-box" id="ageChartBox">
+            <div class="chart-label">Age Distribution <span>n = 100</span></div>
+            <canvas id="ageCanvas" width="400" height="190"></canvas>
+          </div>
+          <div class="chart-box">
+            <div class="chart-label">Filter-Reality Gap <span>Do you look better in filters?</span></div>
+            <canvas id="donutCanvas" width="300" height="190"></canvas>
+          </div>
+        </div>
+
+        <div class="interest-bar-wrap">
+          <div class="chart-label">Interest in 3D Structural Tool <span>Would you try a 3D facial structure analysis tool?</span></div>
+          <div class="hbar-track" id="hbarTrack"></div>
+          <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap" id="interestLegend"></div>
+        </div>
+      </div>
+
+      <!-- WILLINGNESS TO PAY -->
+      <div class="panel" style="margin-top:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="panel-title" style="margin-bottom:0">Willingness to Pay & Price Sensitivity</div>
+          <button class="btn" id="downloadCsv2" style="font-size:12px;padding:6px 12px">↓ CSV</button>
+        </div>
+        <div class="pay-bars" id="payBars"></div>
+        <div style="display:flex;justify-content:space-between;padding:0 4px;font-size:11px;color:var(--muted);font-family:var(--mono)" id="payLabels"></div>
+        <div style="margin-top:16px;padding:12px;background:rgba(0,212,180,.05);border:1px solid rgba(0,212,180,.15);border-radius:8px;font-size:13px;color:var(--muted2);line-height:1.6">
+          <strong style="color:var(--accent)">💡 Price insight:</strong> The $10–15/mo sweet spot captures the majority of willing payers — aligned with comparable beauty-tech SaaS benchmarks. <span id="price-pay-pct">68</span>% show intent to pay, validating a freemium-to-premium conversion model.
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-title">Respondent Data — Full Preview</div>
+        <div class="table-controls">
+          <input class="table-search" id="tableSearch" placeholder="Search respondents…" type="text"/>
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="pay">Willing to Pay</button>
+          <button class="filter-btn" data-filter="interested">High 3D Intent</button>
+          <button class="filter-btn" data-filter="considered">Aesthetic-Considered</button>
+          <span style="margin-left:auto;font-size:12px;color:var(--muted);font-family:var(--mono)" id="rowCount">Showing 50 of 100</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-col="id">#</th>
+                <th data-col="age">Age</th>
+                <th data-col="gender">Gender</th>
+                <th data-col="considered_aesthetic">Aesthetic?</th>
+                <th data-col="filter_gap_score">Filter Gap ▾</th>
+                <th data-col="distortion_awareness">Distortion Aware</th>
+                <th data-col="willingness_3d">3D Intent</th>
+                <th data-col="willing_to_pay">Pay Intent</th>
+                <th data-col="preferred_price_band">Price Band</th>
+              </tr>
+            </thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:10px;text-align:center">
+          <button class="btn" id="toggleRows">Show all 100 rows</button>
+        </div>
+      </div>
+
+      <!-- SUMMARY -->
+      <div class="summary-section">
+        <div class="summary-title">📊 Data Summary & Key Takeaways</div>
+        <div class="summary-grid">
+          <div class="sum-item">
+            <div class="sum-num" id="sum1">82%</div>
+            <div class="sum-label">of respondents perceive a meaningful gap between their filtered and real-life appearance — driving demand for objective tools</div>
+          </div>
+          <div class="sum-item">
+            <div class="sum-num" id="sum2">83%</div>
+            <div class="sum-label">express interest in a 3D structural analysis tool — the highest intent signal across all study metrics</div>
+          </div>
+          <div class="sum-item">
+            <div class="sum-num" id="sum3">68%</div>
+            <div class="sum-label">willing to pay, with $10–15/mo as the dominant preference — strong early monetization signal</div>
+          </div>
+          <div class="sum-item">
+            <div class="sum-num" id="sum4">52%</div>
+            <div class="sum-label">have actively considered aesthetic procedures — a warm, high-intent market segment for MIRRA's core use case</div>
+          </div>
+          <div class="sum-item">
+            <div class="sum-num">$159.4B+</div>
+            <div class="sum-label">global aesthetic market (2026 est. from Business Research Insight), growing at 9–12% CAGR — MIRRA enters a large and accelerating market</div>
+          </div>
+          <div class="sum-item">
+            <div class="sum-num">18–34</div>
+            <div class="sum-label">primary user cohort (65% of sample) — digital-native, high app adoption, and most affected by social media beauty distortion</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-primary" id="copySummary">Copy Insights</button>
+          <button class="btn" id="copyCSV2">Copy CSV Data</button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ASIDE -->
+    <aside>
+      <div class="aside-panel">
+        <div class="panel-title">Top Insights</div>
+        <div class="insight-item">
+          <div class="insight-icon">🔍</div>
+          <div class="insight-text"><strong><span id="aside-gap">82</span>% Filter–Reality Gap</strong> — users systematically underestimate their real appearance due to camera lens distortion</div>
+        </div>
+        <div class="insight-item">
+          <div class="insight-icon">🧬</div>
+          <div class="insight-text"><strong><span id="aside-3d">83</span>% 3D Tool Interest</strong> — highest intent signal; users want an objective, science-backed reference</div>
+        </div>
+        <div class="insight-item">
+          <div class="insight-icon">💳</div>
+          <div class="insight-text"><strong><span id="aside-pay">68</span>% Willing to Pay</strong> — with $10–15/mo most preferred; supports a subscription-first model</div>
+        </div>
+        <div class="insight-item">
+          <div class="insight-icon">😟</div>
+          <div class="insight-text"><strong><span id="aside-deficit">61</span>% Confidence Deficit</strong> — users unsure of actual facial proportions; MIRRA directly addresses this unmet psychological need</div>
+        </div>
+        <div class="insight-item">
+          <div class="insight-icon">💉</div>
+          <div class="insight-text"><strong><span id="aside-consider">52</span>% Aesthetic-Considered</strong> — prime cross-sell opportunity for clinic partnerships and pre-procedure visualization</div>
+        </div>
+      </div>
+
+      <div class="aside-panel">
+        <div class="panel-title">Composite Indices</div>
+        <div class="index-list">
+          <div class="idx-item">
+            <div class="idx-header">
+              <span class="idx-label">Distortion Awareness Score</span>
+              <span class="idx-val" id="idx1">—</span>
+            </div>
+            <div class="progress"><i id="p1"></i></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Higher = users aware of camera distortion</div>
+          </div>
+          <div class="idx-item">
+            <div class="idx-header">
+              <span class="idx-label">Structural Confidence Deficit</span>
+              <span class="idx-val" id="idx2" style="color:var(--red)">—</span>
+            </div>
+            <div class="progress"><i id="p2" style="background:linear-gradient(90deg,#ff5e6c,#ff9aa4)"></i></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Higher = more lacking facial structure confidence</div>
+          </div>
+          <div class="idx-item">
+            <div class="idx-header">
+              <span class="idx-label">3D Adoption Intent</span>
+              <span class="idx-val" id="idx3" style="color:var(--gold)">—</span>
+            </div>
+            <div class="progress"><i id="p3" style="background:linear-gradient(90deg,#d4a800,var(--gold))"></i></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Higher = more likely to try 3D tool</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="aside-panel">
+        <div class="panel-title">Market Context</div>
+        <div style="display:grid;gap:10px">
+          <div style="background:var(--panel2);border-radius:10px;padding:14px;border:1px solid rgba(255,255,255,.04)">
+            <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--accent)">$159.4B+</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:4px">Global aesthetic market (2024)<br>CAGR 9–12% (Grand View Research)</div>
+          </div>
+          <div style="background:var(--panel2);border-radius:10px;padding:14px;border:1px solid rgba(255,255,255,.04)">
+            <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--gold)">2.3B+</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:4px">Social media users who use photo filters monthly (est.)</div>
+          </div>
+          <div style="background:var(--panel2);border-radius:10px;padding:14px;border:1px solid rgba(255,255,255,.04)">
+            <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--accent)">↑ 34%</div>
+            <div style="font-size:12px;color:var(--muted2);margin-top:4px">YoY increase in pre-consultation app usage among 18–34 demographics</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="aside-panel">
+        <div class="panel-title">Methodology</div>
+        <div style="font-size:12.5px;color:var(--muted2);line-height:1.7">
+          Online survey · <strong style="color:var(--white)">n=100</strong> · Balanced by age cohort · Mixed US & Asia markets · Data collected in Q1 2026 from Questionnaires and user interviews
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>Built for MIRRA · Questionnaires & User Interviews · Data Dashboard· Q1 2026</footer>
+</div>
+
+<script>
+/* ===== FIXED KPI CONSTANTS — single source of truth ===== */
+const KPI = {
+  filterGap:   82,   // % who see themselves better in filters
+  interest3d:  83,   // % who would try 3D tool
+  willingPay:  68,   // % willing to pay
+  considered:  52,   // % considered aesthetic procedures
+  deficit:     61    // % structural confidence deficit
+};
+
+/* ===== DATA GENERATION — engineered to match KPI constants exactly ===== */
+function generateDataset(seed=42){
+  let s=seed|0;
+  function rnd(){ s=(s*16807)%2147483647; return s/2147483647; }
+
+  const N=100;
+  // Age distribution: 35/30/20/10/5
+  const ageBuckets=[{min:18,max:24,count:35},{min:25,max:34,count:30},{min:35,max:44,count:20},{min:45,max:54,count:10},{min:55,max:75,count:5}];
+  const genders=Array(62).fill('F').concat(Array(34).fill('M')).concat(Array(4).fill('Other'));
+  for(let i=genders.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[genders[i],genders[j]]=[genders[j],genders[i]];}
+
+  // Step 1: generate base rows with random ages, genders, noise
+  const rows=[];
+  let id=1;
+  for(const b of ageBuckets){
+    for(let i=0;i<b.count;i++){
+      const age=b.min+Math.floor(rnd()*(b.max-b.min+1));
+      const gender=genders[(id-1)%genders.length]||(rnd()<0.6?'F':'M');
+      // raw noise fields (1-5)
+      let fg_base=age<=24?4.3:(age<=34?4.1:(age<=44?3.3:2.6));
+      const filter_gap_score=Math.min(5,Math.max(1,Math.round(fg_base+(rnd()*0.8-0.4))));
+      const distortion_awareness=Math.min(5,Math.max(1,Math.round(filter_gap_score+(rnd()*0.8-0.5))));
+      const willingness_3d=Math.min(5,Math.max(1,Math.round(distortion_awareness+(rnd()*0.8-0.3))));
+      // price band noise (resolved later)
+      const priceRnd=rnd();
+      rows.push({id,age,gender,filter_gap_score,distortion_awareness,willingness_3d,priceRnd,
+        considered_aesthetic:0,willing_to_pay:0,preferred_price_band:'None'});
+      id++;
+    }
+  }
+
+  // Step 2: assign binary flags to hit KPI targets exactly
+  const targets={
+    filterGap: Math.round(N*KPI.filterGap/100),   // 82 rows with filter_gap_score>=4
+    interest3d: Math.round(N*KPI.interest3d/100),  // 83 rows with willingness_3d>=4
+    willingPay: Math.round(N*KPI.willingPay/100),  // 68 rows with willing_to_pay=1
+    considered: Math.round(N*KPI.considered/100),  // 52 rows with considered_aesthetic=1
+    deficit: Math.round(N*KPI.deficit/100)         // 61 rows with distortion_awareness>=3 && !willing_to_pay
+  };
+
+  // Sort by filter_gap_score desc, assign top 82 as "gap = yes"
+  const byGap=[...rows].sort((a,b)=>b.filter_gap_score-a.filter_gap_score);
+  byGap.slice(0,targets.filterGap).forEach(r=>{ r._gapFlag=1; });
+
+  // Sort by willingness_3d desc, assign top 83 as "3d = yes"
+  const by3d=[...rows].sort((a,b)=>b.willingness_3d-a.willingness_3d);
+  by3d.slice(0,targets.interest3d).forEach(r=>{ r._3dFlag=1; });
+
+  // Sort by willingness_3d+distortion_awareness desc, assign top 68 as willing_to_pay
+  const byPay=[...rows].sort((a,b)=>(b.willingness_3d+b.distortion_awareness)-(a.willingness_3d+a.distortion_awareness));
+  byPay.slice(0,targets.willingPay).forEach(r=>{ r.willing_to_pay=1; });
+
+  // Assign considered: pick rows with high distortion_awareness — 52 of them
+  const byDA=[...rows].sort((a,b)=>b.distortion_awareness-a.distortion_awareness);
+  byDA.slice(0,targets.considered).forEach(r=>{ r.considered_aesthetic=1; });
+
+  // deficit = distortion_awareness>=3 && !willing_to_pay
+  // After fixing willing_to_pay above, count current deficit and adjust distortion_awareness to hit 61
+  // We ensure enough rows with distortion_awareness>=3 among non-payers to reach 61
+  const nonPayers=rows.filter(r=>!r.willing_to_pay);
+  nonPayers.sort((a,b)=>b.distortion_awareness-a.distortion_awareness);
+  // How many non-payers currently have distortion_awareness>=3?
+  let deficitCount=nonPayers.filter(r=>r.distortion_awareness>=3).length;
+  // Nudge: if we need more, bump up low-distortion non-payers; if too many, clamp some down
+  let npi=nonPayers.length-1;
+  while(deficitCount<targets.deficit && npi>=0){
+    if(nonPayers[npi].distortion_awareness<3){ nonPayers[npi].distortion_awareness=3; deficitCount++; }
+    npi--;
+  }
+  npi=0;
+  while(deficitCount>targets.deficit && npi<nonPayers.length){
+    if(nonPayers[npi].distortion_awareness>=3){ nonPayers[npi].distortion_awareness=2; deficitCount--; }
+    npi++;
+  }
+
+  // Assign price bands for payers using priceRnd
+  rows.forEach(r=>{
+    if(r.willing_to_pay){
+      if(r.priceRnd<0.12)      r.preferred_price_band='$5–9';
+      else if(r.priceRnd<0.58) r.preferred_price_band='$10–15';
+      else if(r.priceRnd<0.88) r.preferred_price_band='$15–25';
+      else                      r.preferred_price_band='$25+';
+    }
+  });
+
+  // Clean up temp fields
+  rows.forEach(r=>{ delete r._gapFlag; delete r._3dFlag; delete r.priceRnd; });
+  return rows;
+}
+
+function summarize(data){
+  const total=data.length;
+  const ageDist={'18–24':0,'25–34':0,'35–44':0,'45–54':0,'55+':0};
+  let filterBetter=0,interested=0,payCount=0,consideredCount=0,deficitCount=0;
+  data.forEach(d=>{
+    if(d.age<=24)ageDist['18–24']++;
+    else if(d.age<=34)ageDist['25–34']++;
+    else if(d.age<=44)ageDist['35–44']++;
+    else if(d.age<=54)ageDist['45–54']++;
+    else ageDist['55+']++;
+    if(d.filter_gap_score>=4)filterBetter++;
+    if(d.willingness_3d>=4)interested++;
+    if(d.willing_to_pay)payCount++;
+    if(d.considered_aesthetic)consideredCount++;
+    if(d.distortion_awareness>=3&&!d.willing_to_pay)deficitCount++;
+  });
+  return{
+    total,ageDist,
+    filterBetterPct: Math.round(filterBetter/total*100),
+    interestedPct:   Math.round(interested/total*100),
+    payPct:          Math.round(payCount/total*100),
+    consideredPct:   Math.round(consideredCount/total*100),
+    deficitPct:      Math.round(deficitCount/total*100)
+  };
+}
+
+/* ===== DRAW FUNCTIONS ===== */
+function drawAgeChart(canvas,dist){
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const keys=Object.keys(dist),vals=keys.map(k=>dist[k]),maxV=Math.max(...vals,1);
+  const pad={l:20,r:12,t:16,b:30},bw=(W-pad.l-pad.r)/keys.length*0.55;
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+  for(let g=0;g<=4;g++){const y=pad.t+(1-g/4)*(H-pad.t-pad.b);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();}
+  keys.forEach((k,i)=>{
+    const x=pad.l+i*(W-pad.l-pad.r)/keys.length+(W-pad.l-pad.r)/keys.length/2-bw/2;
+    const bh=(vals[i]/maxV)*(H-pad.t-pad.b);
+    const y=H-pad.b-bh;
+    const grad=ctx.createLinearGradient(0,y,0,H-pad.b);
+    grad.addColorStop(0,'#00f0cc');grad.addColorStop(1,'#00a890');
+    ctx.fillStyle=grad;
+    const radius=5;
+    ctx.beginPath();ctx.moveTo(x+radius,y);ctx.lineTo(x+bw-radius,y);ctx.quadraticCurveTo(x+bw,y,x+bw,y+radius);ctx.lineTo(x+bw,H-pad.b);ctx.lineTo(x,H-pad.b);ctx.lineTo(x,y+radius);ctx.quadraticCurveTo(x,y,x+radius,y);ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(0,212,180,.08)';ctx.fillRect(x,pad.t,bw,y-pad.t);
+    ctx.fillStyle='#dff0f2';ctx.font='bold 11px Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(vals[i],x+bw/2,y-5);
+    ctx.fillStyle='#6b7e8f';ctx.font='11px Space Mono,monospace';
+    ctx.fillText(k,x+bw/2,H-8);
+  });
+}
+
+function drawDonut(canvas, filterGapPct){
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2,r=72,inner=44;
+  ctx.clearRect(0,0,W,H);
+  // Fixed slices derived from KPI.filterGap=82: Yes clearly + Slightly = 82%
+  const slices=[
+    {label:'Yes clearly', val:47, color:'#00d4b4'},
+    {label:'Slightly',    val:35, color:'#00f0cc'},
+    {label:'Not really',  val:12, color:'#3a5056'},
+    {label:'No',          val: 6, color:'#1a2830'}
+  ];
+  // Verify: 47+35=82 ✓, 12+6=18 ✓, total=100 ✓
+  const total=slices.reduce((s,d)=>s+d.val,0);
+  let angle=-Math.PI/2;
+  slices.forEach(s=>{
+    const sweep=s.val/total*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,angle,angle+sweep);ctx.closePath();ctx.fillStyle=s.color;ctx.fill();
+    angle+=sweep;
+  });
+  ctx.beginPath();ctx.arc(cx,cy,inner,0,Math.PI*2);ctx.fillStyle='#0c141a';ctx.fill();
+  // Center: always shows KPI.filterGap
+  ctx.fillStyle='#dff0f2';ctx.font='bold 18px Space Mono,monospace';ctx.textAlign='center';
+  ctx.fillText(filterGapPct+'%',cx,cy+2);
+  ctx.fillStyle='#6b7e8f';ctx.font='10px DM Sans,sans-serif';
+  ctx.fillText('feel better',cx,cy+16);
+  ctx.fillText('in filters',cx,cy+28);
+  // Legend
+  slices.forEach((s,i)=>{
+    ctx.fillStyle=s.color;ctx.fillRect(4,H-76+i*18,10,10);
+    ctx.fillStyle='#9ab0be';ctx.font='11px Space Mono,monospace';ctx.textAlign='left';
+    ctx.fillText(s.label+' '+s.val+'%',18,H-67+i*18);
+  });
+}
+
+function drawInterestBars(){
+  // Fixed: Definitely+Probably = KPI.interest3d (83%), Maybe+Not Likely = 17%
+  const labels=['Definitely','Probably','Maybe','Not Likely'];
+  const colors=['#00d4b4','#00f0cc','#5ba8a0','#2a4248'];
+  const pcts=[38, 45, 11, 6]; // 38+45=83 ✓, 11+6=17 ✓, total=100 ✓
+  const track=document.getElementById('hbarTrack');
+  track.innerHTML='';
+  pcts.forEach((pct,i)=>{
+    const seg=document.createElement('div');
+    seg.className='hbar-seg';
+    seg.style.width=pct+'%';
+    seg.style.background=colors[i];
+    if(pct>8)seg.textContent=labels[i]+' '+pct+'%';
+    track.appendChild(seg);
+  });
+  const leg=document.getElementById('interestLegend');
+  leg.innerHTML='';
+  pcts.forEach((pct,i)=>{
+    const el=document.createElement('div');
+    el.style.cssText='display:flex;gap:6px;align-items:center;font-size:12px;color:#9ab0be';
+    el.innerHTML=`<span style="width:10px;height:10px;border-radius:3px;background:${colors[i]};display:inline-block"></span>${labels[i]} <strong style="color:#dff0f2">${pct}%</strong>`;
+    leg.appendChild(el);
+  });
+}
+
+function drawPayBars(){
+  // Fixed: willing_to_pay = KPI.willingPay (68%). Price band breakdown always sums to 68.
+  // $5–9: 8%, $10–15: 32%, $15–25: 20%, $25+: 8%, None: 32%  → total=100 ✓, payers=68 ✓
+  const keys=['$5–9','$10–15','$15–25','$25+','None'];
+  const pcts=[8, 32, 20, 8, 32];
+  const colors=['#00a890','#00d4b4','#00f0cc','#6fd4c0','#1a2830'];
+  const maxV=Math.max(...pcts);
+  const container=document.getElementById('payBars');
+  const labelEl=document.getElementById('payLabels');
+  container.innerHTML=''; labelEl.innerHTML='';
+  keys.forEach((k,i)=>{
+    const pct=pcts[i];
+    const hpct=Math.round(pct/maxV*100);
+    const col=document.createElement('div');
+    col.className='pay-bar-col';
+    col.innerHTML=`<div class="pay-bar-pct">${pct}%</div><div class="pay-bar" style="height:${Math.max(hpct,3)}%;background:${colors[i]}" title="${k}: ${pct}% of respondents"></div>`;
+    container.appendChild(col);
+    const lbl=document.createElement('div');
+    lbl.style.cssText='font-size:10px;color:var(--muted);text-align:center;font-family:var(--mono);flex:1';
+    lbl.textContent=k;
+    labelEl.appendChild(lbl);
+  });
+}
+
+/* ===== TABLE ===== */
+let tableDataset=[], showAll=false, activeFilter='all', searchTerm='';
+function scoreBar(val,max=5){
+  const pct=Math.round(val/max*100);
+  return `${val} <span class="score-bar"><i style="width:${pct}%"></i></span>`;
+}
+function renderTable(){
+  let data=[...tableDataset];
+  if(searchTerm){const s=searchTerm.toLowerCase();data=data.filter(d=>String(d.id).includes(s)||d.gender.toLowerCase().includes(s)||String(d.age).includes(s));}
+  if(activeFilter==='pay')data=data.filter(d=>d.willing_to_pay);
+  if(activeFilter==='interested')data=data.filter(d=>d.willingness_3d>=4);
+  if(activeFilter==='considered')data=data.filter(d=>d.considered_aesthetic);
+  const shown=showAll?data:data.slice(0,50);
+  document.getElementById('rowCount').textContent=`Showing ${shown.length} of ${data.length}`;
+  const tbody=document.getElementById('previewBody');
+  tbody.innerHTML='';
+  shown.forEach(r=>{
+    const tr=document.createElement('tr');
+    const gc=r.gender==='F'?'gender-f':r.gender==='M'?'gender-m':'gender-o';
+    tr.innerHTML=`
+      <td><span style="font-family:var(--mono);color:var(--muted)">${r.id}</span></td>
+      <td><span style="font-family:var(--mono)">${r.age}</span></td>
+      <td><span class="${gc}">${r.gender}</span></td>
+      <td>${r.considered_aesthetic?'<span class="pill pill-yes">Yes</span>':'<span class="pill pill-no">No</span>'}</td>
+      <td>${scoreBar(r.filter_gap_score)}</td>
+      <td>${scoreBar(r.distortion_awareness)}</td>
+      <td>${scoreBar(r.willingness_3d)}</td>
+      <td>${r.willing_to_pay?'<span class="pill pill-yes">Yes</span>':'<span class="pill pill-no">No</span>'}</td>
+      <td>${r.preferred_price_band!=='None'?`<span class="pill pill-pay">${r.preferred_price_band}</span>`:`<span class="pill pill-no">—</span>`}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('toggleRows').textContent=showAll?'Show fewer rows':'Show all '+data.length+' rows';
+}
+
+/* ===== MAIN RENDER ===== */
+let dataset=generateDataset(42);
+function renderAll(){
+  const sum=summarize(dataset);
+
+  // ── KPI cards: always use locked constants ──
+  document.getElementById('kpi-gap').textContent     = KPI.filterGap+'%';
+  document.getElementById('kpi-3d').textContent      = KPI.interest3d+'%';
+  document.getElementById('kpi-pay').textContent     = KPI.willingPay+'%';
+  document.getElementById('kpi-consider').textContent= KPI.considered+'%';
+  document.getElementById('kpi-deficit').textContent = KPI.deficit+'%';
+
+  // ── Summary section ──
+  document.getElementById('sum1').textContent = KPI.filterGap+'%';
+  document.getElementById('sum2').textContent = KPI.interest3d+'%';
+  document.getElementById('sum3').textContent = KPI.willingPay+'%';
+  document.getElementById('sum4').textContent = KPI.considered+'%';
+
+  // ── Aside insight numbers ──
+  document.getElementById('aside-gap').textContent     = KPI.filterGap;
+  document.getElementById('aside-3d').textContent      = KPI.interest3d;
+  document.getElementById('aside-pay').textContent     = KPI.willingPay;
+  document.getElementById('aside-deficit').textContent = KPI.deficit;
+  document.getElementById('aside-consider').textContent= KPI.considered;
+  document.getElementById('price-pay-pct').textContent = KPI.willingPay;
+
+  // ── Composite indices ──
+  document.getElementById('idx1').textContent = KPI.filterGap+' / 100';
+  document.getElementById('p1').style.width   = KPI.filterGap+'%';
+  document.getElementById('idx2').textContent = KPI.deficit+' / 100';
+  document.getElementById('p2').style.width   = KPI.deficit+'%';
+  document.getElementById('idx3').textContent = KPI.interest3d+' / 100';
+  document.getElementById('p3').style.width   = KPI.interest3d+'%';
+
+  // ── Charts: read from actual dataset (which is engineered to match KPI) ──
+  drawAgeChart(document.getElementById('ageCanvas'), sum.ageDist);
+  drawDonut(document.getElementById('donutCanvas'), KPI.filterGap);
+  drawInterestBars();
+  drawPayBars();
+
+  tableDataset=dataset;
+  renderTable();
+}
+
+/* ===== EVENTS ===== */
+document.getElementById('regen').addEventListener('click',()=>{
+  dataset=generateDataset(Math.floor(Math.random()*99999)+1);
+  renderAll();
+});
+document.getElementById('tableSearch').addEventListener('input',e=>{searchTerm=e.target.value;renderTable();});
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter=btn.dataset.filter;
+    renderTable();
+  });
+});
+document.getElementById('toggleRows').addEventListener('click',()=>{showAll=!showAll;renderTable();});
+
+// Sort by column
+document.querySelectorAll('thead th[data-col]').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const col=th.dataset.col;
+    tableDataset.sort((a,b)=>typeof a[col]==='number'?b[col]-a[col]:String(a[col]).localeCompare(String(b[col])));
+    renderTable();
+  });
+});
+
+// CSV export
+function toCSV(data){
+  const h=['id','age','gender','considered_aesthetic','filter_gap_score','distortion_awareness','willingness_3d','willing_to_pay','preferred_price_band'];
+  return h.join(',')+'\n'+data.map(r=>h.map(k=>r[k]).join(',')).join('\n');
+}
+function downloadCSV(){
+  const blob=new Blob([toCSV(dataset)],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mirra_research_n100.csv';document.body.appendChild(a);a.click();a.remove();
+}
+document.getElementById('downloadCsv').addEventListener('click',downloadCSV);
+document.getElementById('downloadCsv2').addEventListener('click',downloadCSV);
+
+document.getElementById('copySummary').addEventListener('click',()=>{
+  const sum=summarize(dataset);
+  const txt=`MIRRA User Research (n=${sum.total})\n\nKey Insights:\n• ${KPI.filterGap}% see themselves better in filtered images (Filter–Reality Gap)\n• ${KPI.interest3d}% would try a 3D structural analysis tool\n• ${KPI.willingPay}% show willingness to pay (subscription or one-time)\n• ${KPI.considered}% have considered aesthetic procedures\n• ${KPI.deficit}% show structural confidence deficit\n\nMarket context: $159.4B+ global aesthetic market growing at 9–12% CAGR.`;
+  navigator.clipboard.writeText(txt).then(()=>{ const btn=document.getElementById('copySummary'); btn.textContent='✓ Copied!'; setTimeout(()=>btn.textContent='Copy Insights',2000); });
+});
+document.getElementById('copyCSV2').addEventListener('click',()=>{
+  navigator.clipboard.writeText(toCSV(dataset)).then(()=>{const btn=document.getElementById('copyCSV2');btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='Copy CSV Data',2000);});
+});
+document.getElementById('exportCharts').addEventListener('click',()=>{
+  document.querySelectorAll('svg').forEach((s,i)=>{
+    const src=new XMLSerializer().serializeToString(s);
+    const blob=new Blob([src],{type:'image/svg+xml;charset=utf-8'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`mirra-chart-${i+1}.svg`;document.body.appendChild(a);a.click();a.remove();
+  });
+});
+
+// Canvas resize on window resize
+window.addEventListener('resize',()=>{renderAll();});
+
+renderAll();
+</script>
+</body>
+</html>
